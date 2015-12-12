@@ -15,7 +15,7 @@
         <service id="mobile_detect.mobile_detector.default" class="%mobile_detect.mobile_detector.class%"/>
 
         <service id="mobile_detect.device_view" class="%mobile_detect.device_view.class%">
-            <argument type="service" id="service_container" />
+            <argument type="service" id="request_stack" />
         </service>
     </services>
 </container>
