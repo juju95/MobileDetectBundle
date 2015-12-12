@@ -51,7 +51,7 @@ class DeviceView
     /**
      * Constructor
      *
-     * @param \Symfony\Component\DependencyInjection\Container $serviceContainer
+     * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
      */
     public function __construct(RequestStack $request_stack)
     {
