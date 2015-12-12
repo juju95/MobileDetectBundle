@@ -17,6 +17,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use SunCat\MobileDetectBundle\Helper\RedirectResponseWithCookie;
 use SunCat\MobileDetectBundle\DeviceDetector\MobileDetector;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * DeviceView
@@ -25,6 +26,8 @@ use SunCat\MobileDetectBundle\DeviceDetector\MobileDetector;
  */
 class DeviceView
 {
+    const COOKIE_KEY        = 'device_view';
+    const SWITCH_PARAM      = 'device_view';
     const VIEW_MOBILE       = 'mobile';
     const VIEW_TABLET       = 'tablet';
     const VIEW_FULL         = 'full';
@@ -46,37 +49,24 @@ class DeviceView
     protected $viewType;
 
     /**
-     * @var string
-     */
-    protected $cookieKey;
-
-    /**
-     * @var string
-     */
-    protected $switchParam;
-
-    /**
      * Constructor
      *
-     * @param \Symfony\Component\DependencyInjection\Container $serviceContainer
+     * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
      */
-    public function __construct(Container $serviceContainer)
+    public function __construct(RequestStack $request_stack)
     {
-        if (false === $serviceContainer->isScopeActive('request')) {
+        if (false === $request_stack->getCurrentRequest()) {
             $this->viewType = self::VIEW_NOT_MOBILE;
 
             return;
         }
 
-        $this->cookieKey = $serviceContainer->getParameter('mobile_detect.cookie_key');
-        $this->switchParam = $serviceContainer->getParameter('mobile_detect.switch_param');
+        $this->request = $request_stack->getCurrentRequest();
 
-        $this->request = $serviceContainer->get('request');
-
-        if ($this->request->query->has($this->switchParam)) {
-            $this->viewType = $this->request->query->get($this->switchParam);
-        } elseif ($this->request->cookies->has($this->cookieKey)) {
-            $this->viewType = $this->request->cookies->get($this->cookieKey);
+        if ($this->request->query->has(self::SWITCH_PARAM)) {
+            $this->viewType = $this->request->query->get(self::SWITCH_PARAM);
+        } elseif ($this->request->cookies->has(self::COOKIE_KEY)) {
+            $this->viewType = $this->request->cookies->get(self::COOKIE_KEY);
         }
         $this->requestedViewType = $this->viewType;
     }
@@ -148,7 +138,7 @@ class DeviceView
      */
     public function hasSwitchParam()
     {
-        return $this->request && $this->request->query->has($this->switchParam);
+        return $this->request && $this->request->query->has(self::SWITCH_PARAM);
     }
 
     /**
@@ -203,7 +193,7 @@ class DeviceView
         if (!$this->request) {
             return;
         }
-        return $this->request->query->get($this->switchParam, self::VIEW_FULL);
+        return $this->request->query->get(self::SWITCH_PARAM, self::VIEW_FULL);
     }
 
     /**
@@ -271,26 +261,6 @@ class DeviceView
     }
 
     /**
-     * Getter of CookieKey
-     *
-     * @return string
-     */
-    public function getCookieKey()
-    {
-        return $this->cookieKey;
-    }
-
-    /**
-     * Getter of SwitchParam
-     *
-     * @return string
-     */
-    public function getSwitchParam()
-    {
-        return $this->switchParam;
-    }
-
-    /**
      * Gets the cookie.
      *
      * @param string $cookieValue
@@ -301,6 +271,6 @@ class DeviceView
     {
         $currentDate = new \Datetime('+1 month');
 
-        return new Cookie($this->cookieKey, $cookieValue, $currentDate->format('Y-m-d'));
+        return new Cookie(self::COOKIE_KEY, $cookieValue, $currentDate->format('Y-m-d'));
     }
 }
